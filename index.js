@@ -276,18 +276,17 @@ app.get("/", async (req, res) => {
     try {
         const data_req = await collection_dataqueue.find();
         const data_file_upload_req = await collection_file_upload.find();
-        res.render("index.ejs");
+        res.render("index.ejs", { title: "Admin", data_queue: data_req, data_file_upload: data_file_upload_req, currUserName: currUserName });
     } catch (err) {
         console.error("Error fetching data:", err);
         // Handle errors appropriately (e.g., render an error page)
     }
 });
-
 app.get("/index", async (req, res) => {
     try {
         const data_req = await collection_dataqueue.find();
         const data_file_upload_req = await collection_file_upload.find();
-        res.render("index.ejs");
+        res.render("index.ejs", { title: "Admin", data_queue: data_req, data_file_upload: data_file_upload_req, currUserName: currUserName });
     } catch (err) {
         console.error("Error fetching data:", err);
         // Handle errors appropriately (e.g., render an error page)
