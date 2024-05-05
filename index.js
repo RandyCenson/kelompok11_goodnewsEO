@@ -38,7 +38,238 @@ app.use(express.static("public"));
 
 app.set("view engine", "ejs");
 
+//register
+app.post('/register', async (req, res) => {
+    try {
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
+        let datausers = {
+            id: Date.now().toString(),
+            username: req.body.username,
+            email: req.body.email,
+            password: hashedPassword
+        };
+        const data = await collection_userdata.create(datausers);
+        console.log(data);
+        res.redirect('/login');
+    } catch {
+        res.redirect('/register');
+    }
+});
 
+
+var currUserName; //untuk index
+//post login
+app.post("/login", async function (req, res) {
+    try {
+        const username = req.body.username;
+        const password = req.body.password;
+        if (username === 'admin' && password === 'admin') {
+            const token = jwt.sign({ username }, secret, { expiresIn: '60s' });
+            res.cookie('token', token, { httpOnly: true });
+            console.log("token admin created: " + token);
+            res.redirect("/admin");
+        }
+
+        else if (username !== "admin") {
+            const user = await collection_userdata.findOne({ username: req.body.username });
+            if (user) {
+                //check if password matches
+                const isPasswordMatch = await bcrypt.compare(req.body.password, user.password);
+                if (!isPasswordMatch) {
+                    return res.status(401).render("login_willy", { messages: "password wrong" });
+                }
+                else {
+                    collection_user_login_tracking.create({ username: username, date: Date.now() });
+                    currUserName = username;
+                    res.redirect("/index");
+                }
+            }
+            else if (req.body.username === "") {
+                return res.status(401).render("login_willy", { messages: "username section is empty" });
+            }
+            else {
+                return res.status(401).render("login_willy", { messages: username + " user not found" });
+
+            }
+        }
+        else if (req.body.username === "") {
+            return res.status(401).render("login_willy", { messages: "username section is empty" });
+        }
+        else {
+            res.status(401).json({ error: 'non-admin user' });
+        }
+
+    }
+    catch (error) {
+        return ;
+    }
+});
+//verify token fuction
+function verifyTokenAdmin(req, res, next) {
+    const token = req.cookies.token;
+    try {
+        const user = jwt.verify(token, secret);
+        req.user = user;
+        next();
+    }
+    catch (err) {
+        res.redirect("/login");
+    }
+}
+
+//post logout
+app.post('/logout', (req, res, next) => {
+    currUserName = '';
+    res.redirect('/index');
+
+})
+
+//interaksi admin
+app.post("/add_queue", async (req, res) => {
+    const data = {
+        date: req.body.date,
+        orderedby: req.body.orderedby,
+        handler: req.body.handler
+    }
+    const userdata = await collection_dataqueue.insertMany(data);
+    console.log(userdata);
+    res.redirect("/admin");
+})
+
+
+app.get('/delete_queue/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await collection_dataqueue.deleteOne({ _id: id });
+        res.redirect("/admin");
+    } catch (error) {
+        console.error('Error deleting data:', error);
+    }
+})
+
+app.post('/update_queue/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await collection_dataqueue.findByIdAndUpdate({ _id: id }, {
+            $set: {
+                tanggal: req.body.date_update,
+                handler: req.body.handler_update,
+                orderedby: req.body.orderedby_update,
+            }
+        })
+        res.redirect("/admin");
+    } catch (error) {
+        console.error('Error updating data:', error);
+    }
+})
+
+const storage = multer.diskStorage({
+    destination: './public/uploads_home_carousel',
+    filename: function (req, file, cb) {
+        cb(null, file.originalname);
+    }
+});
+
+const storage_gallery = multer.diskStorage({
+    destination: './public/uploads_gallery',
+    filename: function (req, file, cb) {
+        cb(null, file.originalname);
+    }
+});
+
+const upload = multer({ storage: storage });
+
+app.post('/home_carousel_img', upload.single('home_carousel_img'), async function (req, res) {
+    var data = req.file
+    try {
+        await collection_file_upload.create({
+            //perlu karena expressjs baca file dari public, beda dgn penyimpanan file perlu tulis public/
+            //di html gk bisa kebaca kalau ada /public
+            img_path: data.path.slice(6),
+            field: data.fieldname
+        });
+        console.log(req.file);
+        res.redirect("/admin");
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+})
+const upload_gallery = multer({ storage: storage_gallery });
+app.post('/gallery_img', upload_gallery.single('gallery_img'), async function (req, res) {
+    var data = req.file
+    try {
+        await collection_file_upload_gallery.create({
+            img_path: data.path.slice(6),
+            field: data.fieldname,
+            description: req.body.description,
+        });
+        console.log(req.file);
+        res.redirect("/admin");
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+})
+
+
+app.get('/delete_home_carousel_img/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await collection_file_upload.deleteOne({ _id: id });
+        res.redirect("/admin");
+    } catch (error) {
+        console.error('Error deleting data:', error);
+    }
+})
+
+app.get('/delete_gallery_img/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await collection_file_upload_gallery.deleteOne({ _id: id });
+        res.redirect("/admin");
+    } catch (error) {
+        console.error('Error deleting data:', error);
+    }
+})
+//email req
+
+app.post("/sendEmail", async (req, res) => {
+    const output = `
+    <p>You have a new contact request</p>
+    <h3>Contact Details</h3>
+    <ul>
+    <li>Email: ${req.body.email}</li>
+    </ul>
+    <h3>about: </h3>
+    <p>${req.body.description}</p>
+    `;
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: 'randy.535220175@stu.untar.ac.id',
+            pass: 'ufxqsbcwgqlrhhky'
+        },
+        port: 465, // or 587
+        secure: true, // true for 465, false for other ports
+        tls: {
+            rejectUnauthorized: false
+        }
+    });
+    let mailOptions = {
+        from: 'randy.535220175@stu.untar.ac.id',
+        to: 'randy.535220175@stu.untar.ac.id',
+        subject: 'GoodnewsEO - Contact Request',
+        text: 'hi there...',
+        html: output
+    }
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return console.log(error);
+        }
+        console.log('Message sent: %s', info.messageId);
+        res.redirect("/index");
+    })
+
+})
 //callback url
 
 app.get("/", async (req, res) => {
