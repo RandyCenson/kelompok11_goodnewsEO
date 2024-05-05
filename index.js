@@ -2,26 +2,26 @@ if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
 
-const express = require("express"); //
-const dotenv = require("dotenv");//
-var multer = require('multer');
-var jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');//
-const cookieParser = require('cookie-parser');
-const nodemailer = require('nodemailer');
-const morgan = require('morgan');
-const bcrypt = require('bcrypt');
-const collection_dataqueue = require("./models/data_queue");
-const collection_userdata = require("./models/data_user");
-const collection_user_login_tracking = require("./models/data_login_tracking");
-const collection_file_upload = require("./models/file_upload_home_carousel");
-const collection_file_upload_gallery = require("./models/file_upload_gallery");
-const secret = 'mysecretkey';
-
-const app = express(); //
+const express = require("express"); // Mengimpor framework Express.js untuk membangun aplikasi web
+const dotenv = require("dotenv"); // Memuat variabel lingkungan dari file .env
+var multer = require('multer'); // Middleware untuk menangani multipart/form-data, digunakan untuk unggahan file
+var jwt = require('jsonwebtoken'); // Implementasi JSON Web Token untuk otentikasi
+const mongoose = require('mongoose'); // Alat pemodelan objek MongoDB yang dirancang untuk bekerja dalam lingkungan asinkron
+const cookieParser = require('cookie-parser'); // Middleware untuk mem-parsing cookie yang terlampir pada objek permintaan klien
+const nodemailer = require('nodemailer'); // Modul untuk mengirim surel
+const morgan = require('morgan'); // Middleware logger permintaan HTTP untuk Node.js
+const bcrypt = require('bcrypt'); // Perpustakaan untuk meng-hash kata sandi
+const collection_dataqueue = require("./models/data_queue"); // Mengimpor model MongoDB untuk antrian data
+const collection_userdata = require("./models/data_user"); // Mengimpor model MongoDB untuk data pengguna
+const collection_user_login_tracking = require("./models/data_login_tracking"); // Mengimpor model MongoDB untuk pelacakan login pengguna
+const collection_file_upload = require("./models/file_upload_home_carousel"); // Mengimpor model MongoDB untuk unggahan file (karusel beranda)
+const collection_file_upload_gallery = require("./models/file_upload_gallery"); // Mengimpor model MongoDB untuk unggahan file (galeri)
+const secret = 'mysecretkey'; // Kunci rahasia untuk penandatanganan token JWT
+const app = express(); // Membuat instansi aplikasi Express
 
 dotenv.config();//
-const port = process.env.PORT || 5000//
+const port = process.env.PORT || 5000; // Mengatur port untuk server mendengarkan
+
 
 mongoose.connect(process.env.MONGO_URL).then(
     () => console.log(`mongoose(database) connected at ${process.env.MONGO_URL}`),
