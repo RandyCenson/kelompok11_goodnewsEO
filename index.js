@@ -11,7 +11,11 @@ const cookieParser = require('cookie-parser');
 const nodemailer = require('nodemailer');
 const morgan = require('morgan');
 const bcrypt = require('bcrypt');
-
+const collection_dataqueue = require("./models/data_queue");
+const collection_userdata = require("./models/data_user");
+const collection_user_login_tracking = require("./models/data_login_tracking");
+const collection_file_upload = require("./models/file_upload_home_carousel");
+const collection_file_upload_gallery = require("./models/file_upload_gallery");
 const secret = 'mysecretkey';
 
 const app = express(); //
