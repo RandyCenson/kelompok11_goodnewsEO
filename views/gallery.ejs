@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery</title>
+    <link rel="stylesheet" href="style-gallery.css">
+
+</head>
+<header >
+    <nav class="nav-bar">
+        <ul>
+            <li><a href="/index">back</a></li>
+            <li>Gallery</li>
+            <li><span style="font-size: small;">Last updated: xx-xx-xxxx</span></li>
+            
+        </ul>
+    </nav>
+</header>
+<body class="body-kalender">
+    <section class="product-grid">
+      <% data_gallery.forEach((data, index) => { %>
+       <article class="product">
+          <img src="<%= data.img_path %>" alt=index>
+          <p><%= data.description %></p>
+        </article>
+      <% }) %>
+        
+        
+      </section>
+    
+</body>
+<%- include('layouts/footer.ejs') %>
+</html>
