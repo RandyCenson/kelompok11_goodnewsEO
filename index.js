@@ -105,7 +105,7 @@ app.post("/login", async function (req, res) {
 
     }
     catch (error) {
-        return ;
+        return res.status(401).render("login_willy", { messages: "token is not found" });
     }
 });
 //verify token fuction
@@ -265,13 +265,18 @@ app.post("/sendEmail", async (req, res) => {
         text: 'hi there...',
         html: output
     }
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            return console.log(error);
-        }
+     transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+        console.log(error);
+        // Display an error message to the user
+        res.send("Oops! Something went wrong while sending the email. Please try again later.");
+    } else {
         console.log('Message sent: %s', info.messageId);
-        res.redirect("/index");
-    })
+        // Provide a success message to the user
+        res.send("Email sent successfully!");
+    }
+});
+
 
 })
 //callback url
