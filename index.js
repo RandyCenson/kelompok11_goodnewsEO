@@ -308,8 +308,12 @@ app.get("/login", (req, res) => {
 })
 app.get('/admin', verifyTokenAdmin, async (req, res) => {
     try {
-        
-        res.render("admin.ejs",);
+        const data_req = await collection_dataqueue.find();
+        const data_user_req = await collection_userdata.find();
+        const data_user_login_req = await collection_user_login_tracking.find();
+        const data_file_upload_req = await collection_file_upload.find();
+        const data_file_upload_gallery_req = await collection_file_upload_gallery.find();
+        res.render("admin.ejs", { title: "Admin", data_file_upload_gallery: data_file_upload_gallery_req, data_queue: data_req, data_user: data_user_req, data_user_login: data_user_login_req, data_file_upload: data_file_upload_req });
     } catch (err) {
         console.error("Error fetching data:", err);
     }
